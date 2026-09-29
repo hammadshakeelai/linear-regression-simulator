@@ -1,0 +1,9 @@
+student_id,name,study_hours,attendance,assignment_score,exam_score
+STU001,Ali,3,75,68,65
+STU002,Sara,5,90,85,88
+STU003,John,2,70,60,58
+STU004,Ayesha,6,95,92,94
+STU005,Bilal,4,80,75,73
+STU006,Hina,7,98,90,96
+STU007,Omar,1,65,55,50
+STU008,Maryam,5,88,82,84
