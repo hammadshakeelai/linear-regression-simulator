@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { Point, predict, computeOLS } from '../core/linearRegression';
-import { Eye, EyeOff, Plus, Trash2, Crosshair, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, Crosshair, Sparkles, Square } from 'lucide-react';
 
 interface RegressionCanvasProps {
   points: Point[];
@@ -10,8 +10,11 @@ interface RegressionCanvasProps {
   yLabel: string;
   showResiduals: boolean;
   onToggleResiduals: () => void;
+  showErrorSquares?: boolean;
+  onToggleErrorSquares?: () => void;
   showOptimalLine: boolean;
   onToggleOptimalLine: () => void;
+  highlightX?: number | null;
   onAddPoint: (point: Point) => void;
   onUpdatePoint: (point: Point) => void;
   onRemovePoint: (id: string) => void;
@@ -25,8 +28,11 @@ export const RegressionCanvas: React.FC<RegressionCanvasProps> = ({
   yLabel,
   showResiduals,
   onToggleResiduals,
+  showErrorSquares = false,
+  onToggleErrorSquares,
   showOptimalLine,
   onToggleOptimalLine,
+  highlightX,
   onAddPoint,
   onUpdatePoint,
   onRemovePoint,
@@ -246,8 +252,23 @@ export const RegressionCanvas: React.FC<RegressionCanvasProps> = ({
             }`}
           >
             {showResiduals ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            <span>Residuals (Errors)</span>
+            <span>Residuals</span>
           </button>
+
+          {onToggleErrorSquares && (
+            <button
+              onClick={onToggleErrorSquares}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border transition ${
+                showErrorSquares
+                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                  : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
+              }`}
+              title="Show geometric error squares (Σ (wx + b - y)²)"
+            >
+              <Square className="w-3.5 h-3.5" />
+              <span>Error Squares</span>
+            </button>
+          )}
 
           <button
             onClick={onToggleOptimalLine}
@@ -416,6 +437,36 @@ export const RegressionCanvas: React.FC<RegressionCanvasProps> = ({
               );
             })}
 
+          {/* Geometric Error Squares: (wx + b - y)² */}
+          {showErrorSquares &&
+            points.map((p) => {
+              const svgX = toSvgX(p.x);
+              const svgPointY = toSvgY(p.y);
+              const predY = predict(p.x, w, b);
+              const svgLineY = toSvgY(predY);
+              const side = Math.abs(svgPointY - svgLineY);
+              if (side < 1) return null;
+
+              const diff = Math.abs(predY - p.y);
+              const errorColor = diff < 3 ? '#10b981' : diff < 8 ? '#f59e0b' : '#f43f5e';
+              const rectX = svgX + side <= width - padding.right ? svgX : Math.max(padding.left, svgX - side);
+
+              return (
+                <rect
+                  key={`sq-${p.id}`}
+                  x={rectX}
+                  y={Math.min(svgPointY, svgLineY)}
+                  width={side}
+                  height={side}
+                  fill={errorColor}
+                  fillOpacity={0.12}
+                  stroke={errorColor}
+                  strokeWidth={1.2}
+                  strokeDasharray="3 3"
+                />
+              );
+            })}
+
           {/* Optimal OLS Line (if toggled) */}
           {showOptimalLine && (
             <line
@@ -428,6 +479,60 @@ export const RegressionCanvas: React.FC<RegressionCanvasProps> = ({
               strokeDasharray="6 4"
               opacity={0.75}
             />
+          )}
+
+          {/* Highlighted Inference Point (from Prediction Playground) */}
+          {typeof highlightX === 'number' && Number.isFinite(highlightX) && (
+            <g className="pointer-events-none">
+              <line
+                x1={toSvgX(highlightX)}
+                y1={padding.top}
+                x2={toSvgX(highlightX)}
+                y2={height - padding.bottom}
+                stroke="#38bdf8"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                opacity={0.8}
+              />
+              <circle
+                cx={toSvgX(highlightX)}
+                cy={toSvgY(predict(highlightX, w, b))}
+                r={14}
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth={1.5}
+                opacity={0.6}
+              />
+              <circle
+                cx={toSvgX(highlightX)}
+                cy={toSvgY(predict(highlightX, w, b))}
+                r={5}
+                fill="#38bdf8"
+                stroke="#ffffff"
+                strokeWidth={2}
+              />
+              <rect
+                x={toSvgX(highlightX) + 8}
+                y={Math.max(padding.top + 5, toSvgY(predict(highlightX, w, b)) - 14)}
+                width={80}
+                height={20}
+                rx={4}
+                fill="#020617"
+                stroke="#38bdf8"
+                strokeWidth={1}
+                opacity={0.92}
+              />
+              <text
+                x={toSvgX(highlightX) + 12}
+                y={Math.max(padding.top + 19, toSvgY(predict(highlightX, w, b)))}
+                fill="#38bdf8"
+                fontSize="10"
+                fontFamily="monospace"
+                fontWeight="bold"
+              >
+                ŷ={predict(highlightX, w, b).toFixed(2)}
+              </text>
+            </g>
           )}
 
           {/* Current Fitted Regression Line: f(x) = w*x + b */}

@@ -9,8 +9,13 @@ import {
   SlidersHorizontal,
   Flame,
   CheckCircle,
+  Volume2,
+  VolumeX,
+  Activity,
 } from 'lucide-react';
 import { StepMathDetails } from '../core/linearRegression';
+
+export type OptimizerType = 'batch' | 'sgd' | 'minibatch' | 'momentum';
 
 interface TrainingControlsProps {
   isTraining: boolean;
@@ -32,6 +37,10 @@ interface TrainingControlsProps {
   details: StepMathDetails;
   initialCost: number;
   converged: boolean;
+  optimizerType?: OptimizerType;
+  onUpdateOptimizerType?: (type: OptimizerType) => void;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
 }
 
 export const TrainingControls: React.FC<TrainingControlsProps> = ({
@@ -54,6 +63,10 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
   details,
   initialCost,
   converged,
+  optimizerType = 'batch',
+  onUpdateOptimizerType,
+  soundEnabled = false,
+  onToggleSound,
 }) => {
   // Pre-configured alpha presets
   const alphaPresets = [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1];
@@ -159,6 +172,21 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           >
             <RotateCcw className="w-4 h-4" />
           </button>
+
+          {/* Sonification Sound Toggle */}
+          {onToggleSound && (
+            <button
+              onClick={onToggleSound}
+              className={`p-2.5 rounded-xl border transition ${
+                soundEnabled
+                  ? 'bg-indigo-500/20 text-cyan-300 border-indigo-500/40 shadow-sm shadow-cyan-500/20'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700/60'
+              }`}
+              title={soundEnabled ? 'Mute Sonification Tone' : 'Enable Gradient Descent Sonification Tone'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+          )}
         </div>
 
         {/* Error Reduction Meter */}
@@ -177,6 +205,39 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Optimizer Selection Bar */}
+      {onUpdateOptimizerType && (
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-950/60 px-3.5 py-2 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-xs font-semibold text-slate-300">Optimizer Mode:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+            {(
+              [
+                { id: 'batch', label: 'Batch GD (Full m)', desc: 'Andrew Ng notebook formulation' },
+                { id: 'sgd', label: 'SGD (1 Sample)', desc: 'Stochastic single sample' },
+                { id: 'minibatch', label: 'Mini-Batch (50%)', desc: 'Mini-batch sampling' },
+                { id: 'momentum', label: 'Momentum (β=0.9)', desc: 'Accelerated descent' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => onUpdateOptimizerType(opt.id)}
+                title={opt.desc}
+                className={`px-2.5 py-1 rounded-lg transition text-[11px] ${
+                  optimizerType === opt.id
+                    ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
+                    : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Hyperparameter Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

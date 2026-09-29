@@ -1,0 +1,12 @@
+{
+  "continuous-worker": {
+    "enabled": true,
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node continue_hook.cjs",
+        "timeout": 15
+      }
+    ]
+  }
+}
