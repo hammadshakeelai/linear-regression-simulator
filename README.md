@@ -10,6 +10,8 @@ An interactive, high-performance web-based simulator for **Linear Regression** a
 
 🌐 **Live Website**: [https://hammadshakeelai.github.io/linear-regression-simulator/](https://hammadshakeelai.github.io/linear-regression-simulator/)
 
+![Linear Regression Animation Banner](banner.svg)
+
 ---
 
 ## 🚀 Key Features
