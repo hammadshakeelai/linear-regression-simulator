@@ -2,10 +2,13 @@
 
 An interactive, high-performance web-based simulator for **Linear Regression** and **Gradient Descent Optimization**. Grounded directly in the mathematical formulation and training logic from [`Linear_Regression.ipynb`](https://github.com/hammadshakeelai/Machine-Learning/blob/main/Programming-for-AI/Linear_Regression.ipynb).
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-success?style=for-the-badge&logo=github)](https://hammadshakeelai.github.io/linear-regression-simulator/)
 ![Linear Regression Simulator](https://img.shields.io/badge/Machine%20Learning-Linear%20Regression-6366f1?style=for-the-badge&logo=scikit-learn)
 ![React](https://img.shields.io/badge/React%2018-TypeScript-38bdf8?style=for-the-badge&logo=react)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-06b6d4?style=for-the-badge&logo=tailwindcss)
 ![Vite](https://img.shields.io/badge/Vite-5.4-8b5cf6?style=for-the-badge&logo=vite)
+
+🌐 **Live Website**: [https://hammadshakeelai.github.io/linear-regression-simulator/](https://hammadshakeelai.github.io/linear-regression-simulator/)
 
 ---
 
