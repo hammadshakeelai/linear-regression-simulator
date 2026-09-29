@@ -24,10 +24,17 @@ export const DatasetSelector: React.FC<DatasetSelectorProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Parse uploaded CSV
+  // Parse uploaded CSV with defensive limits against DoS & invalid data
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // 1. File size check (prevent memory exhaustion DoS)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File size exceeds the 5MB limit. Please upload a smaller CSV.');
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -37,7 +44,7 @@ export const DatasetSelector: React.FC<DatasetSelectorProps> = ({
       const lines = text.trim().split(/\r?\n/);
       if (lines.length < 2) return;
 
-      const header = lines[0].split(',').map((h) => h.trim());
+      const header = lines[0].split(',').map((h) => h.trim().replace(/[^a-zA-Z0-9_\-\s]/g, '').slice(0, 40));
       // Try to find x and y columns or take first 2 numeric columns
       let xColIdx = header.findIndex((h) => ['x', 'attendance', 'study_hours', 'adv', 'advertising'].includes(h.toLowerCase()));
       let yColIdx = header.findIndex((h) => ['y', 'exam_score', 'sale', 'sales', 'score'].includes(h.toLowerCase()));
@@ -48,20 +55,29 @@ export const DatasetSelector: React.FC<DatasetSelectorProps> = ({
       }
 
       const parsedPoints: Point[] = [];
-      for (let i = 1; i < lines.length; i++) {
+      const MAX_POINTS = 500; // Cap points to prevent SVG DOM thread freezing
+
+      for (let i = 1; i < lines.length && parsedPoints.length < MAX_POINTS; i++) {
         const parts = lines[i].split(',');
         if (parts.length > Math.max(xColIdx, yColIdx)) {
           const valX = parseFloat(parts[xColIdx]);
           const valY = parseFloat(parts[yColIdx]);
-          if (!isNaN(valX) && !isNaN(valY)) {
+          // Strict isFinite check (blocks NaN, Infinity, -Infinity)
+          if (Number.isFinite(valX) && Number.isFinite(valY) && Math.abs(valX) < 1e9 && Math.abs(valY) < 1e9) {
+            const rawLabel = parts[1] && isNaN(parseFloat(parts[1])) ? parts[1].trim() : `P${i}`;
+            const safeLabel = rawLabel.replace(/[^a-zA-Z0-9_\-\s]/g, '').slice(0, 25);
             parsedPoints.push({
               id: `csv-${i}`,
               x: valX,
               y: valY,
-              label: parts[1] && isNaN(parseFloat(parts[1])) ? parts[1] : `P${i}`,
+              label: safeLabel,
             });
           }
         }
+      }
+
+      if (lines.length - 1 > MAX_POINTS) {
+        alert(`Loaded the first ${MAX_POINTS} points out of ${lines.length - 1} to ensure smooth 60 FPS animation.`);
       }
 
       if (parsedPoints.length > 0) {

@@ -388,12 +388,10 @@ for i in range(epochs):
                 }`}
               >
                 <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">10</td>
-                <td className="pl-4 sm:pl-6">
-                  <span className="text-[#9cdcfe]">total_wxbyx</span> <span className="text-white">=</span>{' '}
-                  <span className="text-[#b5cea8]">0</span>{' '}
-                  <span className="text-slate-500">|</span>{' '}
-                  <span className="text-[#9cdcfe]">total_wxby</span> <span className="text-white">=</span>{' '}
-                  <span className="text-[#b5cea8]">0</span>
+                <td className="pl-4 sm:pl-6 text-slate-300">
+                  <span className="text-[#9cdcfe]">total_wxbyx</span> = <span className="text-[#b5cea8]">0</span> ;{' '}
+                  <span className="text-[#9cdcfe]">total_wxby</span> = <span className="text-[#b5cea8]">0</span> ;{' '}
+                  <span className="text-[#9cdcfe]">squared_total_wxby</span> = <span className="text-[#b5cea8]">0</span>
                 </td>
               </tr>
 
@@ -413,7 +411,7 @@ for i in range(epochs):
                 </td>
               </tr>
 
-              {/* Line 12: Diff & Accumulate */}
+              {/* Line 12: Diff calculation (wx_i + b - y_i) */}
               <tr
                 className={`hover:bg-[#282828]/50 ${
                   activeLineIndex === 12 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
@@ -425,34 +423,70 @@ for i in range(epochs):
                   <span className="text-[#9cdcfe]">w</span> <span className="text-white">*</span>{' '}
                   <span className="text-[#9cdcfe]">x[j]</span> <span className="text-white">+</span>{' '}
                   <span className="text-[#9cdcfe]">b</span> <span className="text-white">-</span>{' '}
-                  <span className="text-[#9cdcfe]">y[j]</span>
+                  <span className="text-[#9cdcfe]">y[j]</span>{' '}
+                  <span className="text-emerald-500 italic text-[10px] sm:text-[11px] ml-2">
+                    # error: (w·x_i + b - y_i)
+                  </span>
                 </td>
               </tr>
 
-              {/* Line 13: Gradients sum */}
+              {/* Line 13: Squared error accumulation for J(w, b) = 1/(2m) * sum((wx+b-y)^2) */}
               <tr
-                className={`hover:bg-[#282828]/50 ${
+                className={`hover:bg-[#282828]/50 bg-amber-950/20 ${
                   activeLineIndex === 13 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
                 }`}
               >
                 <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">13</td>
                 <td className="pl-8 sm:pl-12">
-                  <span className="text-[#9cdcfe]">total_wxbyx</span>{' '}
+                  <span className="text-[#9cdcfe]">squared_total_wxby</span>{' '}
                   <span className="text-white">+=</span> <span className="text-[#9cdcfe]">diff</span>{' '}
-                  <span className="text-white">*</span> <span className="text-[#9cdcfe]">x[j]</span>{' '}
-                  <span className="text-slate-500 text-[10px] ml-1 sm:ml-2">
-                    (sum: {details.total_wxbyx.toFixed(1)})
+                  <span className="text-white">**</span> <span className="text-[#b5cea8]">2</span>{' '}
+                  <span className="text-amber-400 font-mono text-[10px] sm:text-[11px] ml-2 font-semibold">
+                    # Σ (w·x_i + b - y_i)² = {details.squared_total_wxby.toFixed(2)}
                   </span>
                 </td>
               </tr>
 
-              {/* Line 14: Cost calculation J(w, b) */}
+              {/* Line 14: Weight gradient accumulation: sum((wx + b - y) * x) */}
               <tr
                 className={`hover:bg-[#282828]/50 ${
                   activeLineIndex === 14 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
                 }`}
               >
                 <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">14</td>
+                <td className="pl-8 sm:pl-12">
+                  <span className="text-[#9cdcfe]">total_wxbyx</span>{' '}
+                  <span className="text-white">+=</span> <span className="text-[#9cdcfe]">diff</span>{' '}
+                  <span className="text-white">*</span> <span className="text-[#9cdcfe]">x[j]</span>{' '}
+                  <span className="text-slate-400 text-[10px] ml-2">
+                    # Σ error·x = {details.total_wxbyx.toFixed(1)}
+                  </span>
+                </td>
+              </tr>
+
+              {/* Line 15: Bias gradient accumulation: sum(wx + b - y) */}
+              <tr
+                className={`hover:bg-[#282828]/50 ${
+                  activeLineIndex === 15 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
+                }`}
+              >
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">15</td>
+                <td className="pl-8 sm:pl-12">
+                  <span className="text-[#9cdcfe]">total_wxby</span>{' '}
+                  <span className="text-white">+=</span> <span className="text-[#9cdcfe]">diff</span>{' '}
+                  <span className="text-slate-400 text-[10px] ml-2">
+                    # Σ error = {details.total_wxby.toFixed(1)}
+                  </span>
+                </td>
+              </tr>
+
+              {/* Line 16: Cost calculation J(w, b) = 1/(2m) * squared_total_wxby */}
+              <tr
+                className={`hover:bg-[#282828]/50 bg-amber-950/20 ${
+                  activeLineIndex === 16 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
+                }`}
+              >
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">16</td>
                 <td className="pl-4 sm:pl-6">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[#9cdcfe]">jwb</span>
@@ -464,24 +498,27 @@ for i in range(epochs):
                       max="2"
                       value={costFactor}
                       onChange={(e) => setCostFactor(parseInt(e.target.value) || 2)}
-                      className="w-10 px-1 py-0.5 bg-[#2d2d2d] border border-amber-500/50 rounded text-amber-300 font-mono text-center"
+                      className="w-10 px-1 py-0.5 bg-[#2d2d2d] border border-amber-500/50 rounded text-amber-300 font-mono text-center font-bold"
                       title="Cost divisor factor (2 for Stanford 1/2m, 1 for standard MSE)"
                     />
                     <span>* m)) * squared_total_wxby</span>
                     <span className="text-amber-400 font-bold ml-1">
-                      → J = {details.jwb.toFixed(4)}
+                      → J(w,b) = {details.jwb.toFixed(4)}
                     </span>
+                  </div>
+                  <div className="text-emerald-400 italic text-[10px] sm:text-[11px] mt-0.5">
+                    # J(w, b) = 1/({costFactor}m) * Σ (w·x_i + b - y_i)²
                   </div>
                 </td>
               </tr>
 
-              {/* Line 15: Parameter update: w */}
+              {/* Line 17: Parameter update: temp_w */}
               <tr
                 className={`hover:bg-[#282828]/50 ${
-                  activeLineIndex === 15 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
+                  activeLineIndex === 17 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
                 }`}
               >
-                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">15</td>
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">17</td>
                 <td className="pl-4 sm:pl-6">
                   <span className="text-[#9cdcfe]">temp_w</span> <span className="text-white">=</span>{' '}
                   <span className="text-[#9cdcfe]">w</span> <span className="text-white">-</span>{' '}
@@ -492,13 +529,13 @@ for i in range(epochs):
                 </td>
               </tr>
 
-              {/* Line 16: Parameter update: b */}
+              {/* Line 18: Parameter update: temp_b */}
               <tr
                 className={`hover:bg-[#282828]/50 ${
-                  activeLineIndex === 16 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
+                  activeLineIndex === 18 ? 'bg-yellow-500/20 border-l-2 border-yellow-400' : ''
                 }`}
               >
-                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">16</td>
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">18</td>
                 <td className="pl-4 sm:pl-6">
                   <span className="text-[#9cdcfe]">temp_b</span> <span className="text-white">=</span>{' '}
                   <span className="text-[#9cdcfe]">b</span> <span className="text-white">-</span>{' '}
@@ -509,9 +546,9 @@ for i in range(epochs):
                 </td>
               </tr>
 
-              {/* Line 17: Commit updates */}
+              {/* Line 19: Commit updates */}
               <tr className="hover:bg-[#282828]/50">
-                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">17</td>
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">19</td>
                 <td className="pl-4 sm:pl-6">
                   <span className="text-[#9cdcfe]">w</span>, <span className="text-[#9cdcfe]">b</span>{' '}
                   <span className="text-white">=</span>{' '}
@@ -520,9 +557,9 @@ for i in range(epochs):
                 </td>
               </tr>
 
-              {/* Line 18: Print logging */}
+              {/* Line 20: Print logging */}
               <tr className="hover:bg-[#282828]/50">
-                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">18</td>
+                <td className="w-8 sm:w-10 text-right pr-3 sm:pr-4 text-slate-600 select-none">20</td>
                 <td className="pl-4 sm:pl-6 flex items-center gap-1.5 flex-wrap">
                   <span className="text-[#c586c0]">if</span> (
                   <span className="text-[#9cdcfe]">i</span> + <span className="text-[#b5cea8]">1</span>) %

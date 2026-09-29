@@ -53,11 +53,13 @@ export const RegressionCanvas: React.FC<RegressionCanvasProps> = ({
     let minY = Math.min(...points.map((p) => p.y));
     let maxY = Math.max(...points.map((p) => p.y));
 
-    // Also include predicted values at bounds so line doesn't get clipped weirdly
+    // Also include predicted values at bounds so line doesn't get clipped weirdly (guarded against non-finite values)
     const predMinX = predict(minX, w, b);
     const predMaxX = predict(maxX, w, b);
-    minY = Math.min(minY, predMinX, predMaxX);
-    maxY = Math.max(maxY, predMinX, predMaxX);
+    const safePredMin = Number.isFinite(predMinX) ? predMinX : minY;
+    const safePredMax = Number.isFinite(predMaxX) ? predMaxX : maxY;
+    minY = Math.min(minY, safePredMin, safePredMax);
+    maxY = Math.max(maxY, safePredMin, safePredMax);
 
     // Add 15% padding
     const xSpan = Math.max(maxX - minX, 1);

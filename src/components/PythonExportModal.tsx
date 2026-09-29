@@ -32,6 +32,10 @@ export const PythonExportModal: React.FC<PythonExportModalProps> = ({
   const xArrayStr = `[${points.map((p) => p.x).join(', ')}]`;
   const yArrayStr = `[${points.map((p) => p.y).join(', ')}]`;
 
+  // Defensive sanitization: escape label strings to prevent code breakout in generated script
+  const safeXLabel = JSON.stringify(xLabel.replace(/[\r\n]/g, ' ').slice(0, 50));
+  const safeYLabel = JSON.stringify(yLabel.replace(/[\r\n]/g, ' ').slice(0, 50));
+
   const scriptContent = `"""
 Linear Regression Simulator - Exported Python Script
 Directly compatible with your Linear_Regression.ipynb workflow.
@@ -41,8 +45,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 1. Dataset (${points.length} samples)
-# X: ${xLabel}
-# Y: ${yLabel}
+# X: ${xLabel.replace(/[\r\n]/g, ' ').slice(0, 50)}
+# Y: ${yLabel.replace(/[\r\n]/g, ' ').slice(0, 50)}
 x = np.array(${xArrayStr}, dtype=float)
 y = np.array(${yArrayStr}, dtype=float)
 m = len(x)
@@ -95,8 +99,8 @@ plt.scatter(x, y, marker='x', c='r', label='Data points (Actual)')
 x_line = np.linspace(min(x) - 1, max(x) + 1, 100)
 y_line = w * x_line + b
 plt.plot(x_line, y_line, label=f'Model: y = {w:.2f}x + {b:.2f}', c='b')
-plt.xlabel('${xLabel}')
-plt.ylabel('${yLabel}')
+plt.xlabel(${safeXLabel})
+plt.ylabel(${safeYLabel})
 plt.title('Linear Regression Model Fit')
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.6)

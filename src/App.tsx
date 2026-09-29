@@ -214,6 +214,13 @@ export default function App() {
         }
       }
 
+      // Defensive check against exploding gradients / NaN overflow
+      if (!Number.isFinite(curW) || !Number.isFinite(curB) || !Number.isFinite(lastCost) || Math.abs(curW) > 1e9 || Math.abs(curB) > 1e9) {
+        setIsTraining(false);
+        alert('Exploding gradients detected! Weights diverged due to a high learning rate. Try reducing alpha or toggling "Feature Scaling (Z-Score)" ON.');
+        return;
+      }
+
       setW(curW);
       setB(curB);
       setCurrentEpoch(curEpoch);
