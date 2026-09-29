@@ -229,6 +229,10 @@ export default function App() {
                   currentB={b}
                   optimalW={ols.w}
                   optimalB={ols.b}
+                  onSetParameters={(newW, newB) => {
+                    setW(newW);
+                    setB(newB);
+                  }}
                 />
               </>
             )}

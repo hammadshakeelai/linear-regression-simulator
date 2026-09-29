@@ -8,6 +8,7 @@ interface CostContourProps {
   currentB: number;
   optimalW: number;
   optimalB: number;
+  onSetParameters?: (w: number, b: number) => void;
 }
 
 export const CostContour: React.FC<CostContourProps> = ({
@@ -16,6 +17,7 @@ export const CostContour: React.FC<CostContourProps> = ({
   currentB,
   optimalW,
   optimalB,
+  onSetParameters,
 }) => {
   const width = 450;
   const height = 280;
@@ -79,6 +81,28 @@ export const CostContour: React.FC<CostContourProps> = ({
     { rx: 220, ry: 120, stroke: '#818cf8', width: 0.8 },
   ];
 
+  const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!onSetParameters) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const svgX = (e.clientX - rect.left) * scaleX;
+    const svgY = (e.clientY - rect.top) * scaleY;
+
+    if (
+      svgX >= padding.left &&
+      svgX <= width - padding.right &&
+      svgY >= padding.top &&
+      svgY <= height - padding.bottom
+    ) {
+      const xRatio = (svgX - padding.left) / innerWidth;
+      const yRatio = (height - padding.bottom - svgY) / innerHeight;
+      const rawW = bounds.minW + xRatio * (bounds.maxW - bounds.minW);
+      const rawB = bounds.minB + yRatio * (bounds.maxB - bounds.minB);
+      onSetParameters(parseFloat(rawW.toFixed(3)), parseFloat(rawB.toFixed(2)));
+    }
+  };
+
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col">
       {/* Header */}
@@ -90,7 +114,7 @@ export const CostContour: React.FC<CostContourProps> = ({
           <div>
             <h3 className="text-sm font-bold text-white">2D Cost Surface: J(w, b) Contours</h3>
             <span className="text-[11px] text-slate-400">
-              Trajectory of (w, b) descending into the global minimum
+              Click anywhere to relocate (w, b) • Trajectory into minimum
             </span>
           </div>
         </div>
@@ -103,7 +127,11 @@ export const CostContour: React.FC<CostContourProps> = ({
 
       {/* SVG Canvas */}
       <div className="relative w-full aspect-[16/10] select-none">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className={`w-full h-full ${onSetParameters ? 'cursor-crosshair' : ''}`}
+          onClick={handleSvgClick}
+        >
           <defs>
             <radialGradient id="contourGrad" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#0f172a" />
