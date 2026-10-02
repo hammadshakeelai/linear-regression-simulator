@@ -28,7 +28,7 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
   const [yLabel, setYLabel] = useState<string>(initialPreset.yLabel);
 
   // Model Parameters: w (slope) and b (intercept)
-  const [w, setW] = useState<number>(initialPreset.initialW ?? 1.0);
+  const [w, setW] = useState<number>(initialPreset.initialW ?? 0.0);
   const [b, setB] = useState<number>(initialPreset.initialB ?? 0.0);
 
   // Optimizer & Hyperparameters
@@ -37,10 +37,11 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
   const [epochs, setEpochs] = useState<number>(1000);
   const [currentEpoch, setCurrentEpoch] = useState<number>(0);
   const [isTraining, setIsTraining] = useState<boolean>(false);
-  const [delayMs, setDelayMs] = useState<number>(30);
+  const [delayMs, setDelayMs] = useState<number>(35);
   const [stepsPerTick, setStepsPerTick] = useState<number>(1);
-  const [standardize, setStandardize] = useState<boolean>(false);
+  const [standardize, setStandardize] = useState<boolean>(initialPreset.defaultStandardize ?? false);
   const [converged, setConverged] = useState<boolean>(false);
+  const [hasDiverged, setHasDiverged] = useState<boolean>(false);
   const [momentumBeta, setMomentumBeta] = useState<number>(0.9);
 
   // Momentum velocities
@@ -105,6 +106,7 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
       setInitialCost(details.jwb);
       setCurrentEpoch(0);
       setConverged(false);
+      setHasDiverged(false);
       velocityW.current = 0;
       velocityB.current = 0;
     },
@@ -123,11 +125,12 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
     setPoints(preset.points);
     setXLabel(preset.xLabel);
     setYLabel(preset.yLabel);
-    const initW = preset.initialW ?? 1.0;
+    const initW = preset.initialW ?? 0.0;
     const initB = preset.initialB ?? 0.0;
     setW(initW);
     setB(initB);
     setAlpha(preset.suggestedAlpha);
+    setStandardize(preset.defaultStandardize ?? false);
     resetLossHistory(initW, initB);
   }, [resetLossHistory]);
 
@@ -272,9 +275,7 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
         Math.abs(curB) > 1e9
       ) {
         setIsTraining(false);
-        alert(
-          'Exploding gradients detected! Weights diverged due to a high learning rate. Try reducing alpha or toggling "Feature Scaling (Z-Score)" ON.'
-        );
+        setHasDiverged(true);
         return;
       }
 
@@ -376,6 +377,8 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
     standardize,
     setStandardize,
     converged,
+    hasDiverged,
+    setHasDiverged,
     optimizerType,
     setOptimizerType,
     momentumBeta,
