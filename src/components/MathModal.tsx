@@ -142,6 +142,25 @@ export const MathModal: React.FC<MathModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section 6: Feature Scaling & Hessian Geometry */}
+          <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 space-y-2">
+            <h4 className="text-sm font-bold text-cyan-300">6. Why Feature Scaling Matters (Hessian Conditioning)</h4>
+            <p>
+              The curvature of the cost surface is dictated by the Hessian matrix:
+            </p>
+            <div className="p-2.5 rounded-lg bg-slate-900 font-mono text-xs text-center text-cyan-300 border border-slate-800">
+              H = (1/m) · X^T X = [ (1/m)∑x_i² , x̄ ; x̄ , 1 ]
+            </div>
+            <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-400">
+              <li>
+                <strong>Unscaled features (e.g. x ∈ [65, 98])</strong>: The ratio of eigenvalues (condition number κ) is over 10,000! The cost contours form an extremely narrow, steep ravine. Gradient descent oscillates violently in the w direction while making virtually zero progress along b.
+              </li>
+              <li>
+                <strong>Standardized features (Z-Score: z = (x - μ)/σ)</strong>: Eigenvalues are equalized to λ₁ = λ₂ = 1.0 (circular contours). Gradient descent steps point directly at the global minimum, achieving smooth convergence in 25–35 steps!
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Footer */}
