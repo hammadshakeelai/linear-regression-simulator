@@ -8,6 +8,8 @@ import {
   computeNormalizationParams,
   normalizePoints,
   denormalizeModel,
+  computeStabilityAnalysis,
+  StabilityAnalysis,
 } from '../core/linearRegression';
 import { PRESET_DATASETS, DatasetPreset } from '../data/defaultDatasets';
 import { LossPoint } from '../components/LossChart';
@@ -68,6 +70,12 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
   const currentDetails = useMemo(
     () => computeStepDetails(points, w, b, alpha),
     [points, w, b, alpha]
+  );
+
+  // Theoretical stability analysis & Lipschitz bound
+  const stability = useMemo(
+    () => computeStabilityAnalysis(points, alpha, standardize),
+    [points, alpha, standardize]
   );
 
   // Subtle audio tone based on cost (pitch descends with cost)
@@ -392,6 +400,7 @@ export function useLinearRegression(options?: UseLinearRegressionOptions) {
     currentDetails,
     ols,
     optimalDetails,
+    stability,
     lossHistory,
     initialCost,
     // Sound effects

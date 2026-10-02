@@ -70,6 +70,7 @@ export default function App() {
     currentDetails,
     ols,
     optimalDetails,
+    stability,
     lossHistory,
     initialCost,
     soundEnabled,
@@ -183,6 +184,7 @@ export default function App() {
             details={currentDetails}
             initialCost={initialCost}
             converged={converged}
+            stability={stability}
             optimizerType={optimizerType}
             onUpdateOptimizerType={setOptimizerType}
             soundEnabled={soundEnabled}
@@ -221,6 +223,9 @@ export default function App() {
               currentB={b}
               optimalW={ols.w}
               optimalB={ols.b}
+              dj_dw={currentDetails.dj_dw}
+              dj_db={currentDetails.dj_db}
+              alpha={alpha}
               onSetParameters={(newW, newB) => {
                 setW(newW);
                 setB(newB);

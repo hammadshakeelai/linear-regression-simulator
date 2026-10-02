@@ -13,7 +13,7 @@ import {
   VolumeX,
   Activity,
 } from 'lucide-react';
-import { StepMathDetails } from '../core/linearRegression';
+import { StepMathDetails, StabilityAnalysis } from '../core/linearRegression';
 
 export type OptimizerType = 'batch' | 'sgd' | 'minibatch' | 'momentum';
 
@@ -37,6 +37,7 @@ interface TrainingControlsProps {
   details: StepMathDetails;
   initialCost: number;
   converged: boolean;
+  stability?: StabilityAnalysis;
   optimizerType?: OptimizerType;
   onUpdateOptimizerType?: (type: OptimizerType) => void;
   soundEnabled?: boolean;
@@ -63,6 +64,7 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
   details,
   initialCost,
   converged,
+  stability,
   optimizerType = 'batch',
   onUpdateOptimizerType,
   soundEnabled = false,
@@ -274,7 +276,30 @@ export const TrainingControls: React.FC<TrainingControlsProps> = ({
             ))}
           </div>
 
-          {alpha > 0.1 && (
+          {/* Real-time Stability & Convergence Analysis Badge */}
+          {stability && (
+            <div
+              className={`p-2 rounded-lg text-[10px] font-mono flex items-start gap-1.5 border mt-2 ${
+                stability.regime === 'optimal'
+                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/30'
+                  : stability.regime === 'oscillating'
+                  ? 'bg-amber-950/40 text-amber-300 border-amber-500/30'
+                  : stability.regime === 'divergent'
+                  ? 'bg-rose-950/40 text-rose-300 border-rose-500/30 font-bold'
+                  : 'bg-slate-900 text-slate-400 border-slate-800'
+              }`}
+            >
+              <Activity className="w-3 h-3 shrink-0 mt-0.5" />
+              <div>
+                <div>{stability.regimeMessage}</div>
+                <div className="text-[9px] opacity-75 font-sans mt-0.5">
+                  Max stable α: {stability.alphaMax < 0.001 ? stability.alphaMax.toExponential(2) : stability.alphaMax.toFixed(4)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {alpha > 0.1 && !stability && (
             <div className="text-[10px] text-amber-400 flex items-center gap-1">
               <Flame className="w-3 h-3 shrink-0" />
               <span>Large alpha may cause exploding gradients.</span>

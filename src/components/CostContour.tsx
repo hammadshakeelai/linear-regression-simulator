@@ -8,6 +8,9 @@ interface CostContourProps {
   currentB: number;
   optimalW: number;
   optimalB: number;
+  dj_dw?: number;
+  dj_db?: number;
+  alpha?: number;
   onSetParameters?: (w: number, b: number) => void;
 }
 
@@ -17,6 +20,9 @@ export const CostContour: React.FC<CostContourProps> = ({
   currentB,
   optimalW,
   optimalB,
+  dj_dw,
+  dj_db,
+  alpha,
   onSetParameters,
 }) => {
   const width = 450;
@@ -137,6 +143,17 @@ export const CostContour: React.FC<CostContourProps> = ({
               <stop offset="0%" stopColor="#0f172a" />
               <stop offset="100%" stopColor="#020617" />
             </radialGradient>
+            <marker
+              id="gradientArrow"
+              viewBox="0 0 10 10"
+              refX="6"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#fb7185" />
+            </marker>
           </defs>
 
           {/* Plot Background */}
@@ -232,6 +249,45 @@ export const CostContour: React.FC<CostContourProps> = ({
               stroke="#ffffff"
               strokeWidth={1.5}
             />
+
+            {/* Gradient Descent Step Vector (-α · ∇J) */}
+            {typeof dj_dw === 'number' && typeof dj_db === 'number' && (
+              <g className="pointer-events-none">
+                {(() => {
+                  const curSvgX = toSvgX(currentW);
+                  const curSvgY = toSvgY(currentB);
+                  const stepW = -(alpha || 0.01) * dj_dw;
+                  const stepB = -(alpha || 0.01) * dj_db;
+
+                  const targetW = currentW + stepW;
+                  const targetB = currentB + stepB;
+                  const targetSvgX = toSvgX(targetW);
+                  const targetSvgY = toSvgY(targetB);
+
+                  const dx = targetSvgX - curSvgX;
+                  const dy = targetSvgY - curSvgY;
+                  const len = Math.sqrt(dx * dx + dy * dy);
+                  if (len < 1) return null;
+
+                  const scale = Math.min(50, Math.max(16, len)) / len;
+                  const endX = curSvgX + dx * scale;
+                  const endY = curSvgY + dy * scale;
+
+                  return (
+                    <line
+                      x1={curSvgX}
+                      y1={curSvgY}
+                      x2={endX}
+                      y2={endY}
+                      stroke="#fb7185"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      markerEnd="url(#gradientArrow)"
+                    />
+                  );
+                })()}
+              </g>
+            )}
           </g>
 
           {/* X axis labels */}

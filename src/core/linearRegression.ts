@@ -325,3 +325,82 @@ export function denormalizeModel(
   const b = params.meanY + params.stdY * bNorm - w * params.meanX;
   return { w, b };
 }
+
+export interface StabilityAnalysis {
+  lambdaMax: number;
+  alphaMax: number;
+  alphaOptimal: number;
+  regime: 'slow' | 'optimal' | 'oscillating' | 'divergent';
+  regimeMessage: string;
+}
+
+export function computeStabilityAnalysis(
+  points: Point[],
+  alpha: number,
+  standardize: boolean
+): StabilityAnalysis {
+  const m = points.length;
+  if (m < 2) {
+    return {
+      lambdaMax: 1,
+      alphaMax: 1,
+      alphaOptimal: 0.1,
+      regime: 'optimal',
+      regimeMessage: 'Insufficient data points',
+    };
+  }
+
+  if (standardize) {
+    const lambdaMax = 1.0;
+    const alphaMax = 2.0;
+    const alphaOptimal = 0.1;
+    let regime: StabilityAnalysis['regime'] = 'optimal';
+    let regimeMessage = 'Stable & isotropic convergence (Z-score active)';
+
+    if (alpha < 0.01) {
+      regime = 'slow';
+      regimeMessage = 'Slow monotonic descent (try α = 0.05 - 0.1)';
+    } else if (alpha > 1.2) {
+      regime = 'divergent';
+      regimeMessage = 'Exploding divergence risk (α > 1.2)';
+    } else if (alpha > 0.8) {
+      regime = 'oscillating';
+      regimeMessage = 'Damped oscillation around global minimum';
+    }
+
+    return { lambdaMax, alphaMax, alphaOptimal, regime, regimeMessage };
+  }
+
+  let sumX = 0;
+  let sumSqX = 0;
+  for (const p of points) {
+    sumX += p.x;
+    sumSqX += p.x * p.x;
+  }
+  const meanX = sumX / m;
+  const meanSqX = sumSqX / m;
+  const varX = Math.max(0.001, meanSqX - meanX * meanX);
+
+  const trH = meanSqX + 1;
+  const detH = varX;
+  const discriminant = Math.max(0, trH * trH - 4 * detH);
+  const lambdaMax = (trH + Math.sqrt(discriminant)) / 2;
+  const alphaMax = 2.0 / (lambdaMax || 1);
+  const alphaOptimal = 1.0 / (lambdaMax || 1);
+
+  let regime: StabilityAnalysis['regime'] = 'optimal';
+  let regimeMessage = 'Optimal learning rate for fast convergence';
+
+  if (alpha >= alphaMax) {
+    regime = 'divergent';
+    regimeMessage = `Divergence Risk: α ≥ α_max (${alphaMax < 0.001 ? alphaMax.toExponential(2) : alphaMax.toFixed(4)})`;
+  } else if (alpha > 0.7 * alphaMax) {
+    regime = 'oscillating';
+    regimeMessage = `Underdamped Oscillation: α near limit (${alphaMax < 0.001 ? alphaMax.toExponential(2) : alphaMax.toFixed(4)})`;
+  } else if (alpha < 0.1 * alphaOptimal) {
+    regime = 'slow';
+    regimeMessage = 'Very slow progress: consider increasing α';
+  }
+
+  return { lambdaMax, alphaMax, alphaOptimal, regime, regimeMessage };
+}
